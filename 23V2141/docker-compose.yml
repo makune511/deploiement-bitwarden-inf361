@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  bitwarden:
+    image: vaultwarden/server:latest
+    container_name: bitwarden_23V2141
+    restart: unless-stopped
+    environment:
+      # Configuration de base
+      - DOMAIN=https://23V2141.systeme-res30.app
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+      - SIGNUPS_ALLOWED=${SIGNUPS_ALLOWED}
+      - INVITATIONS_ALLOWED=${INVITATIONS_ALLOWED}
+      
+      # Configuration SMTP
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_FROM=${SMTP_USER}
+      - SMTP_USERNAME=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_SECURITY=starttls
+      
+      # Configuration base de données
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db/${DB_NAME}
+    networks:
+      - bitwarden_network
+    volumes:
+      - ./bitwarden.app:/data  # BIND VOLUME
+    ports:
+      - "6690:80"  # Port HTTP
+      - "6691:3012"  # Port WebSocket 
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    container_name: bitwarden_db_23V2141
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    networks:
+      - bitwarden_network
+    volumes:
+      - ./bitwarden.app/postgres:/var/lib/postgresql/data  # BIND VOLUME
+
+networks:
+  bitwarden_network:
+    driver: bridge
